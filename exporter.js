@@ -1,14 +1,13 @@
-// Compiles database memory configurations cleanly back into escaped CSV file blobs
+// Compiles memory arrays back into standard raw CSV strings
 function exportToCsv() {
     if (mangaData.length === 0) return alert("No parsed data is available to generate file exports.");
 
     let csvRows = [];
-    csvRows.push(headersList.join(',')); // Add raw headers string row up front
+    csvRows.push(headersList.join(','));
 
     mangaData.forEach(row => {
         const values = headersList.map(header => {
             const cellValue = row[header] || '';
-            // Escape special inner quotes or comma constraints
             if (/[",\n\r]/.test(cellValue)) {
                 return `"${cellValue.replace(/"/g, '""')}"`;
             }
@@ -17,14 +16,52 @@ function exportToCsv() {
         csvRows.push(values.join(','));
     });
 
-    const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    triggerBlobDownload(csvRows.join('\n'), 'comick-mylist.csv', 'text/csv');
+}
+
+// Converts layout memory objects cleanly into standard hierarchical XML tags
+function exportToXml() {
+    if (mangaData.length === 0) return alert("No parsed data is available to generate file exports.");
+
+    let xmlString = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    xmlString += '<myanimelist>\n';
+
+    mangaData.forEach(row => {
+        xmlString += '  <manga>\n';
+        headersList.forEach(header => {
+            // Ignore custom layout 'cover' column if it is empty to keep XML schemas clean
+            if (header === 'cover' && !row[header]) return;
+            
+            let value = row[header] || '';
+            // Escape core standard XML invalid characters to prevent broken tree outputs
+            let cleanXmlValue = String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+
+            xmlString += `    <${header}>${cleanXmlValue}</${header}>\n`;
+        });
+        xmlString += '  </manga>\n';
+    });
+
+    xmlString += '</myanimelist>';
+
+    triggerBlobDownload(xmlString, 'comick-mylist.xml', 'text/xml');
+}
+
+// Generic file link generation utility module
+function triggerBlobDownload(content, filename, contentType) {
+    const blob = new Blob([content], { type: `${contentType};charset=utf-8;` });
     const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(csvBlob);
-    downloadLink.setAttribute('download', 'comick-mylist-2026-06-13.csv');
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.setAttribute('download', filename);
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
 }
 
-// Bind down export execution click event trigger rules
+// Bind utilities directly onto button click handles
 document.getElementById('exportCsvButton').addEventListener('click', exportToCsv);
+document.getElementById('exportXmlButton').addEventListener('click', exportToXml);
