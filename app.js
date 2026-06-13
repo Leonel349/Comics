@@ -1,16 +1,80 @@
 let mangaData = [];
 let headersList = [];
 
-// Fetch data automatically from repository paths
-fetch('comick_list.csv')
-    .then(response => response.text())
-    .then(csvText => processCSV(csvText))
-    .catch(() => {
-        fetch('/Comics/comick_list.csv')
-            .then(response => response.text())
-            .then(csvText => processCSV(csvText))
-            .catch(err => alert("Error: Target data backup file not detected in project path."));
-    });
+// 1. DYNAMIC FILE DISCOVERY: Check all common capitalization layouts automatically
+const csvFilePossibilities = [
+    'comick-mylist-2026-06-13.csv',
+    'comick-mylist-2026-06-13.CSV',
+    'comick-mylist.csv',
+    'mangas.csv',
+    'mangas.CSV'
+];
+
+async function loadCSVData() {
+    let csvText = null;
+    
+    for (let fileName of csvFilePossibilities) {
+        try {
+            let response = await fetch(fileName);
+            if (!response.ok) {
+                response = await fetch(`/Comics/${fileName}`);
+            }
+            
+            if (response.ok) {
+                csvText = await response.text();
+                console.log(`Successfully pulled data target: ${fileName}`);
+                updateUploadUI(fileName);
+                break;
+            }
+        } catch (e) {
+            console.warn(`Path skipped: ${fileName}`);
+        }
+    }
+
+    if (csvText) {
+        processCSV(csvText);
+    } else {
+        showMissingFileAlert();
+    }
+}
+
+function updateUploadUI(name) {
+    const display = document.getElementById('fileNameDisplay');
+    if (display) display.textContent = `Active file: ${name}`;
+}
+
+function showMissingFileAlert() {
+    document.querySelector('.table-container').innerHTML = `
+        <div style="padding: 30px; text-align: center; color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 8px; border: 1px solid #f5c6cb;">
+            ⚠️ CSV Backup Data File Not Found on GitHub!<br><br>
+            <span style="font-weight: normal; color: #555; font-size: 14px; display: block; margin-bottom: 15px;">
+                The server could not read the file automatically. Make sure the name matches or use the button above to upload it directly.
+            </span>
+        </div>
+    `;
+}
+
+// 2. MANUAL LOCAL FILE PICKER LOGIC
+document.getElementById('csvFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    updateUploadUI(file.name);
+    
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        // Re-inject the table container fallback markup in case it showed the error alert
+        const container = document.querySelector('.table-container');
+        if (container.querySelector('table') === null) {
+            container.innerHTML = `<table id="mangaTable"><thead><tr id="tableHeaders"></tr></thead><tbody></tbody></table>`;
+        }
+        processCSV(evt.target.result);
+    };
+    reader.readAsText(file);
+});
+
+// Start checking the server path immediately
+loadCSVData();
 
 // Advanced regex helper to extract ONLY digits from any text or full link string
 function cleanId(value) {
@@ -23,8 +87,7 @@ function processCSV(csvText) {
     const rawLines = parseCSVLines(csvText);
     if (rawLines.length < 1) return;
 
-    // 1. Dynamic Header Assembly (Prepend custom cover frame item)
-    headersList = rawLines.map(h => h.trim());
+    headersList = rawLines[0].map(h => h.trim());
     if (!headersList.includes('cover')) {
         headersList.unshift('cover');
     }
@@ -38,7 +101,6 @@ function processCSV(csvText) {
         headersRow.appendChild(th);
     });
 
-    // 2. Map raw values array to JavaScript object schemas
     mangaData = [];
     for (let i = 1; i < rawLines.length; i++) {
         let values = rawLines[i];
@@ -63,6 +125,7 @@ function processCSV(csvText) {
 
 function renderTable(data) {
     const tbody = document.querySelector('#mangaTable tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
     
     data.forEach((row, index) => {
@@ -104,7 +167,6 @@ function renderTable(data) {
     });
 }
 
-// Sequential worker targeting absolute API formatting paths explicitly
 async function fetchCoversSequentially(data) {
     const rowsWithMal = data.map((row, idx) => ({row, idx})).filter(item => item.row.mal && item.row.mal !== '');
 
@@ -115,7 +177,6 @@ async function fetchCoversSequentially(data) {
         if (!malId || isNaN(malId)) continue; 
 
         try {
-            // Standard direct Jikan API query endpoint
             const targetUrl = 'https://jikan.moe' + malId;
             const response = await fetch(targetUrl);
             
