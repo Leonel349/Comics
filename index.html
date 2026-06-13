@@ -91,9 +91,14 @@
     <script>
         let mangaData = [];
 
-        // Fetch and parse the target CSV file
-        fetch('comick-mylist-2026-06-13.csv')
-            .then(response => response.text())
+                // Solução para o caminho correto no repositório GitHub Pages
+        fetch('/Comics/comick-mylist-2026-06-13.csv')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Arquivo CSV não encontrado no repositório');
+                }
+                return response.text();
+            })
             .then(csvText => {
                 Papa.parse(csvText, {
                     header: true,
@@ -103,7 +108,27 @@
                         renderTable(mangaData);
                     }
                 });
+            })
+            .catch(error => {
+                console.error('Erro ao carregar o CSV:', error);
+                // Caso dê erro de caminho relativo, tenta carregar da raiz atual
+                carregarCaminhoAlternativo();
             });
+
+        function carregarCaminhoAlternativo() {
+            fetch('comick-mylist-2026-06-13.csv')
+                .then(response => response.text())
+                .then(csvText => {
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            mangaData = results.data;
+                            renderTable(mangaData);
+                        }
+                    });
+                });
+        }
 
         function renderTable(data) {
             const tbody = document.querySelector('#mangaTable tbody');
