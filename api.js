@@ -4,10 +4,54 @@ function generateSecureUrl(endpointArray) {
     return new URL(endpointArray.join('/'), `${protocol}//${host}/`);
 }
 
-function cleanId(value) {
-    if (!value) return '';
-    const matches = String(value).match(/\d+/g);
-    return matches ? matches[matches.length - 1] : '';
+// FUNÇÕES DE MANIPULAÇÃO DO DOM CORRIGIDAS E PROTEGIDAS CONTRA SUBSTITUIÇÃO DO CABEÇALHO
+function updateMalLinkInDOM(rowIndex, malId) {
+    const tbody = document.getElementById('mangaTableBody') || document.querySelector('#mangaTable tbody');
+    if (!tbody) return;
+    const row = tbody.children[rowIndex]; // Mira com segurança absoluta na linha correta dos dados
+    if (!row) return;
+    
+    const malIndex = headersList.indexOf('mal');
+    if (malIndex !== -1 && row.children[malIndex]) {
+        const cell = row.children[malIndex];
+        cell.innerHTML = malId && malId !== '-' ? `<a class="mal-link" href="https://myanimelist.net{malId}" target="_blank">#${malId}</a>` : malId;
+    }
+}
+
+function updateTitleInDOM(rowIndex, title) {
+    const tbody = document.getElementById('mangaTableBody') || document.querySelector('#mangaTable tbody');
+    if (!tbody) return;
+    const row = tbody.children[rowIndex];
+    if (!row) return;
+
+    const titleIndex = headersList.indexOf('title');
+    if (titleIndex !== -1 && row.children[titleIndex]) {
+        row.children[titleIndex].textContent = title;
+    }
+}
+
+function injectCoverIntoDOM(rowIndex, imgUrl) {
+    const tbody = document.getElementById('mangaTableBody') || document.querySelector('#mangaTable tbody');
+    if (!tbody) return;
+    const row = tbody.children[rowIndex];
+    if (!row) return;
+
+    const coverIndex = headersList.indexOf('cover');
+    if (coverIndex !== -1 && row.children[coverIndex]) {
+        row.children[coverIndex].innerHTML = `<img src="${imgUrl}" class="cover-img" alt="Cover">`;
+    }
+}
+
+function clearPlaceholderInDOM(rowIndex) {
+    const tbody = document.getElementById('mangaTableBody') || document.querySelector('#mangaTable tbody');
+    if (!tbody) return;
+    const row = tbody.children[rowIndex];
+    if (!row) return;
+
+    const coverIndex = headersList.indexOf('cover');
+    if (coverIndex !== -1 && row.children[coverIndex]) {
+        row.children[coverIndex].textContent = 'No Image';
+    }
 }
 
 async function processCoversAndFallbacks(data) {
@@ -23,11 +67,12 @@ async function processCoversAndFallbacks(data) {
         if (!malId && (row.title || row.synonyms)) {
             addLog(`Missing MAL reference code discovered for entry: "${originalTitle}". Gathering all terms for voting pipeline...`, 'warning');
             
-            // Cria a lista com o título e todos os sinônimos disponíveis
             const searchTerms = [row.title, ...(row.synonyms ? row.synonyms.split(';').map(s => s.trim()) : [])].filter(Boolean);
-            const idVotes = {}; // Dicionário para computar os votos de cada ID encontrado: { "12345": 2, "67890": 1 }
+            const idVotes = {}; 
             
-            for (let term of searchTerms) {
+            // Mudança para loop clássico indexado para contornar problemas de repetição segura no Rate Limit
+            for (let t = 0; t < searchTerms.length; t++) {
+                const term = searchTerms[t];
                 if (term.length < 3) continue;
                 try {
                     const searchUrl = generateSecureUrl(['v4', 'manga']);
@@ -38,30 +83,26 @@ async function processCoversAndFallbacks(data) {
                     if (searchRes.status === 429) { 
                         addLog("Rate limit (HTTP 429) hit! Backing off worker sequence for 2.5 seconds...", "error");
                         await new Promise(r => setTimeout(r, 2500)); 
-                        // Diminui o contador do loop de termos para refazer a pesquisa deste mesmo termo de forma segura
-                        searchTerms.unshift(term); 
+                        t--; // Decrementa com segurança para tentar o mesmo termo de forma limpa
                         continue; 
                     }
                     
                     if (searchRes.ok) {
                         const searchData = await searchRes.json();
-                        if (searchData.data && searchData.data.length > 0) {
+                        // CORREÇÃO: Verificação segura para evitar erros do tipo "Cannot read properties of undefined"
+                        if (searchData.data && searchData.data.length > 0 && searchData.data[0].mal_id) {
                             const foundId = String(searchData.data[0].mal_id);
-                            // Registra o voto para o ID encontrado
                             idVotes[foundId] = (idVotes[foundId] || 0) + 1;
                         }
                     }
                 } catch (e) { 
                     console.warn(`Search drop: ${term}`, e); 
                 }
-                // Pausa obrigatória entre requisições de termos para evitar sobrecarga na API
                 await new Promise(r => setTimeout(r, 500));
             }
 
-            // Processa o resultado da votação dos IDs coletados
             const votedIds = Object.keys(idVotes);
             if (votedIds.length > 0) {
-                // Encontra o ID que obteve a maior contagem/repetição
                 let winnerId = votedIds[0];
                 for (let id of votedIds) {
                     if (idVotes[id] > idVotes[winnerId]) {
@@ -75,7 +116,6 @@ async function processCoversAndFallbacks(data) {
                 addLog(`Voting resolved for "${originalTitle}" -> Winner MAL ID #${malId} (Votes: ${idVotes[winnerId]})`, 'success');
                 dynamicMatchesDiscovered++;
             } else {
-                // Se o fluxo terminou e absolutamente nenhum ID foi retornado por nenhum termo
                 malId = "-";
                 row.mal = malId;
                 updateMalLinkInDOM(i, malId);
@@ -84,7 +124,6 @@ async function processCoversAndFallbacks(data) {
         }
 
         // 2. METADATA DEEP QUERY: Pull covers and enforce English translation title injections
-        // Só avança se tiver um ID e se ele for estritamente numérico (evita rodar se malId for "-")
         if (malId && !isNaN(malId)) {
             if (!row.cover) {
                 try {
