@@ -29,8 +29,15 @@ function processCSV(csvText) {
     const rawLines = parseCSVLines(csvText);
     if (rawLines.length < 1) return;
 
-    headersList = rawLines[0].map(h => h.trim());
-    if (!headersList.includes('cover')) {
+    // Direct header extraction matching your precise tracking properties sequence
+    headersList = rawLines[0].map(h => h.trim().toLowerCase());
+    
+    // Safety check: ensure 'cover' is present at the very beginning of the index registry
+    if (headersList.length > 0 && headersList[0] !== 'cover') {
+        if (headersList.includes('cover')) {
+            // If it exists somewhere else, remove it so we can push it to index 0
+            headersList = headersList.filter(h => h !== 'cover');
+        }
         headersList.unshift('cover');
     }
 
@@ -40,7 +47,6 @@ function processCSV(csvText) {
     headersList.forEach(header => {
         const th = document.createElement('th');
         th.textContent = header;
-        // Bind dynamic alpha-sorting evaluation triggers directly onto the element headers click
         th.addEventListener('click', () => sortTableByColumn(header));
         headersRow.appendChild(th);
     });
@@ -54,9 +60,16 @@ function processCSV(csvText) {
 
         let entry = {};
         let valueIdx = 0;
+        
         headersList.forEach((header) => {
             if (header === 'cover') {
-                entry[header] = values[0] && (values[0].startsWith('http') || values[0] === '') ? values[0] : ''; 
+                // Check if row entry string value is already an online HTTP image link string path
+                const possibleImg = values[0] ? values[0].trim() : '';
+                entry[header] = (possibleImg.startsWith('http')) ? possibleImg : '';
+                // Only step the column reader index forward if 'cover' was native to the CSV text layout
+                if (rawLines[0].map(h=>h.trim().toLowerCase()).startsWith && rawLines[0][0].trim().toLowerCase() === 'cover') {
+                    valueIdx++;
+                }
             } else {
                 entry[header] = values[valueIdx] ? values[valueIdx].trim() : '';
                 valueIdx++;
@@ -70,7 +83,7 @@ function processCSV(csvText) {
 }
 
 document.getElementById('csvFileInput').addEventListener('change', function(e) {
-    const file = e.target.files[0];
+    const file = e.target.files;
     if (!file) return;
     updateUploadUI(file.name);
     const reader = new FileReader();
