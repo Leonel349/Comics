@@ -8,6 +8,8 @@
     --th-text: white;
     --row-hover: #f8fafc;
     --badge-bg: #34495e;
+    --log-bg: #1e293b;
+    --log-text: #f8fafc;
 }
 
 [data-theme="dark"] {
@@ -20,6 +22,8 @@
     --th-text: #f8fafc;
     --row-hover: #334155;
     --badge-bg: #475569;
+    --log-bg: #0f172a;
+    --log-text: #38bdf8;
 }
 
 body { 
@@ -47,6 +51,40 @@ h1 { text-align: center; font-size: 2rem; margin-bottom: 5px; color: var(--headi
     color: var(--text-color);
 }
 
+/* System Terminal Logging Panel Styling */
+.log-container {
+    background: var(--log-bg);
+    color: var(--log-text);
+    border-radius: 10px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 12px;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #94a3b8;
+}
+.log-body {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.log-row { line-height: 1.4; }
+.log-row.info { color: #38bdf8; }
+.log-row.success { color: #4ade80; }
+.log-row.warning { color: #fbbf24; }
+.log-row.error { color: #f87171; }
+
 .table-container { 
     overflow-x: auto; 
     background: var(--card-bg); 
@@ -69,7 +107,6 @@ tr:hover { background-color: var(--row-hover); }
 .cover-img { width: 45px; height: 65px; object-fit: cover; border-radius: 4px; display: block; }
 .cover-placeholder { width: 45px; height: 65px; background: var(--border-color); border-radius: 4px; display: inline-block; font-size: 10px; text-align: center; line-height: 65px; }
 
-/* Control Panel Grid Elements */
 .panel-grid { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; padding: 15px; background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border-color); }
 .controls-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; }
 .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
