@@ -23,9 +23,9 @@ document.getElementById('csvFileInput').addEventListener('change', function(e) {
         const fileContent = evt.target.result;
         addLog("File context buffer read completed successfully. Processing strings structural encoding format...", "info");
         
-        // Wipe down older tables
+        // Wipe down older tables - Mantém IDs claros separados para thead e tbody
         const container = document.querySelector('.table-container');
-        container.innerHTML = `<table id="mangaTable"><thead><tr id="tableHeaders"></tr></thead><tbody></tbody></table>`;
+        container.innerHTML = `<table id="mangaTable"><thead><tr id="tableHeaders"></tr></thead><tbody id="mangaTableBody"></tbody></table>`;
         
         // ROUTING ENGINE: Route evaluation down based on true string format properties
         if (targetFile.name.toLowerCase().endsWith('.xml') || fileContent.trim().startsWith('<')) {
@@ -55,7 +55,6 @@ function processCSV(csvText) {
     addLog(`Parsed ${rawLines.length - 1} data rows from flat spreadsheet stream. Building grid layers...`, 'success');
     headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
     
-    // CORREÇÃO AQUI: Pegamos apenas a linha 0 [0] antes de fazer o mapeamento (.map)
     const rawHeaders = rawLines[0].map(h => String(h).trim().toLowerCase());
 
     buildTableHeadersMarkup();
@@ -84,7 +83,6 @@ function processXML(xmlText) {
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
     
-    // Safety handling against broken non-valid XML trees
     const parserError = xmlDoc.querySelector('parsererror');
     if (parserError) {
         addLog(`Malformed XML context parsing constraint: ${parserError.textContent}`, 'error');
@@ -104,10 +102,7 @@ function processXML(xmlText) {
         let entry = {};
         
         headersList.forEach(header => {
-            // CORREÇÃO: Buscamos a lista de elementos com a tag do cabeçalho
             const elementsFound = mangaNode.getElementsByTagName(header);
-            
-            // CORREÇÃO: Pegamos o primeiro elemento [0] se ele existir, e só então lemos o textContent
             let valueText = (elementsFound && elementsFound.length > 0) ? elementsFound[0].textContent.trim() : '';
             
             if (header === 'cover') {
@@ -123,6 +118,7 @@ function processXML(xmlText) {
 
 function buildTableHeadersMarkup() {
     const headersRow = document.getElementById('tableHeaders');
+    if (!headersRow) return;
     headersRow.innerHTML = '';
     headersList.forEach(header => {
         const th = document.createElement('th');
@@ -133,13 +129,47 @@ function buildTableHeadersMarkup() {
     setupColumnCheckboxes();
 }
 
+function renderTable(data) {
+    const tbody = document.getElementById('mangaTableBody') || document.querySelector('#mangaTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    
+    data.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        
+        headersList.forEach(header => {
+            const td = document.createElement('td');
+            let val = row[header] || '';
+
+            if (header === 'cover') {
+                if (val) {
+                    td.innerHTML = `<img src="${val}" class="cover-img" alt="Cover">`;
+                } else {
+                    td.innerHTML = `<div class="cover-placeholder" id="placeholder-${index}">...</div>`;
+                }
+            } else if (header === 'mal' && val !== '' && val !== '-') {
+                const idOnly = cleanId(val);
+                td.innerHTML = idOnly ? `<a class="mal-link" href="https://myanimelist.net{idOnly}" target="_blank">#${idOnly}</a>` : val;
+            } else if (header === 'anilist' && val !== '' && val !== '-') {
+                const idOnly = cleanId(val);
+                td.innerHTML = idOnly ? `<a class="mal-link" href="https://anilist.co{idOnly}" target="_blank">#${idOnly}</a>` : val;
+            } else {
+                td.textContent = val;
+                if (header === 'title') td.className = 'title-column';
+            }
+            tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+    });
+    applyColumnVisibilityStates(); 
+}
+
 function completeProcessingPipeline() {
     renderTable(mangaData);
     addLog(`Data table rows injection completely mapped onto interface node grids. Total items: ${mangaData.length}`, 'success');
     processCoversAndFallbacks(mangaData);
 }
 
-// Track export logs inside exporter module directly
 function logExportAction(formatType) {
     addLog(`Compilation export requested. Compiling data memory map registry into layout schema: [.${formatType.toUpperCase()}]`, 'info');
     addLog(`File generation processing completely resolved. Initiating binary blob attachment file down download trigger...`, 'success');
@@ -153,6 +183,5 @@ document.getElementById('search').addEventListener('input', function() {
     renderTable(filtered);
 });
 
-// Launch layout themes and UI state flags directly on tab ready
 initThemeMode();
 initLocalOnlyUI();
