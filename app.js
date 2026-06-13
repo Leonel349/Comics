@@ -177,7 +177,7 @@ async function fetchCoversSequentially(data) {
         if (!malId || isNaN(malId)) continue; 
 
         try {
-            const targetUrl = 'https://jikan.moe' + malId;
+            const targetUrl = 'https://jikan.moe/' + malId;
             const response = await fetch(targetUrl);
             
             if (response.status === 429) {
