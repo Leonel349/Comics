@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
-    <!-- Append version control query parameters to bypass old CSS cache memory -->
-    <link rel="stylesheet" href="style.css?v=2">
+    
+    <!-- FIX: This inline data string tells the browser not to look for an external favicon.ico file, instantly solving the 404 error -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
+    
+    <!-- Incrementing version numbers forces the browser to drop cached file data -->
+    <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -27,8 +31,8 @@
         </table>
     </div>
 
-    <!-- FORCE RELOAD: Appending version arguments explicitly breaks local browser caches -->
-    <script src="csvParser.js?v=2"></script>
-    <script src="app.js?v=2"></script>
+    <!-- UPDATE TO VERSION 3: This guarantees your browser uses the cleaned string numbers for images -->
+    <script src="csvParser.js?v=3"></script>
+    <script src="app.js?v=3"></script>
 </body>
 </html>
