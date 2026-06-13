@@ -1,4 +1,78 @@
-// Render the complete visual grid data elements cleanly matching discovered column arrays
+let currentSortColumn = null;
+let isSortAscending = true;
+
+// Active tracking key strings for permanent state saving
+const STORAGE_HIDDEN_COLS_KEY = 'comics_hidden_columns_registry';
+const STORAGE_THEME_KEY = 'comics_active_visual_theme';
+
+function getSavedHiddenColumns() {
+    const saved = localStorage.getItem(STORAGE_HIDDEN_COLS_KEY);
+    return saved ? JSON.parse(saved) : [];
+}
+
+function saveHiddenColumns(list) {
+    localStorage.setItem(STORAGE_HIDDEN_COLS_KEY, JSON.stringify(list));
+}
+
+function initThemeMode() {
+    const savedTheme = localStorage.getItem(STORAGE_THEME_KEY) || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+}
+
+document.getElementById('themeToggle').addEventListener('click', () => {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    localStorage.setItem(STORAGE_THEME_KEY, newTheme);
+});
+
+function setupColumnCheckboxes() {
+    const container = document.getElementById('checkboxContainer');
+    container.innerHTML = '';
+    const hiddenCols = getSavedHiddenColumns();
+
+    headersList.forEach(header => {
+        const label = document.createElement('label');
+        label.className = 'checkbox-item';
+        
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = !hiddenCols.includes(header);
+        checkbox.setAttribute('data-column', header);
+        
+        checkbox.addEventListener('change', (e) => {
+            const hCols = getSavedHiddenColumns();
+            if (!e.target.checked) {
+                if (!hCols.includes(header)) hCols.push(header);
+            } else {
+                const index = hCols.indexOf(header);
+                if (index > -1) hCols.splice(index, 1);
+            }
+            saveHiddenColumns(hCols);
+            applyColumnVisibilityStates();
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(document.createTextNode(header));
+        container.appendChild(label);
+    });
+    document.getElementById('columnToggleWrapper').style.display = 'block';
+}
+
+function applyColumnVisibilityStates() {
+    const hiddenCols = getSavedHiddenColumns();
+    headersList.forEach((header, index) => {
+        const colIdx = index + 1;
+        const ths = document.querySelectorAll(`#mangaTable th:nth-child(${colIdx})`);
+        const tds = document.querySelectorAll(`#mangaTable td:nth-child(${colIdx})`);
+        
+        const shouldHide = hiddenCols.includes(header);
+        
+        ths.forEach(el => shouldHide ? el.classList.add('hidden-column') : el.classList.remove('hidden-column'));
+        tds.forEach(el => shouldHide ? el.classList.add('hidden-column') : el.classList.remove('hidden-column'));
+    });
+}
+
 function renderTable(data) {
     const tbody = document.querySelector('#mangaTable tbody');
     if (!tbody) return;
@@ -31,9 +105,55 @@ function renderTable(data) {
         });
         tbody.appendChild(tr);
     });
+    applyColumnVisibilityStates(); // Enforce visibility structures onto table data nodes
 }
 
-// Live precise DOM state injection updates
+function sortTableByColumn(columnName) {
+    if (currentSortColumn === columnName) {
+        isSortAscending = !isSortAscending;
+    } else {
+        currentSortColumn = columnName;
+        isSortAscending = true;
+    }
+
+    mangaData.sort((a, b) => {
+        let valA = String(a[columnName] || '').toLowerCase().trim();
+        let valB = String(b[columnName] || '').toLowerCase().trim();
+
+        // Alphanumeric evaluation adjustments (Parse cleanly if cell contains pure numerical integers)
+        const numA = parseFloat(valA);
+        const numB = parseFloat(valB);
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return isSortAscending ? numA - numB : numB - numA;
+        }
+
+        if (valA < valB) return isSortAscending ? -1 : 1;
+        if (valA > valB) return isSortAscending ? 1 : -1;
+        return 0;
+    });
+
+    renderTable(mangaData);
+    updateSortingGlyphs();
+}
+
+function updateSortingGlyphs() {
+    const ths = document.querySelectorAll('#mangaTable th');
+    ths.forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (th.textContent.replace(/[🔼🔽]/g, '').trim() === currentSortColumn) {
+            th.classList.add(isSortAscending ? 'sort-asc' : 'sort-desc');
+        }
+    });
+}
+
+function updateTitleInDOM(rowIndex, newTitle) {
+    const tr = document.querySelector(`tr:nth-child(${rowIndex + 1})`);
+    const titleColIdx = headersList.indexOf('title');
+    if (tr && titleColIdx !== -1) {
+        tr.children[titleColIdx].innerHTML = `<strong>${newTitle}</strong>`;
+    }
+}
+
 function updateMalLinkInDOM(rowIndex, malId) {
     const tr = document.querySelector(`tr:nth-child(${rowIndex + 1})`);
     const malColIdx = headersList.indexOf('mal');
@@ -67,7 +187,7 @@ function showMissingFileAlert() {
         <div style="padding: 30px; text-align: center; color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 8px; border: 1px solid #f5c6cb;">
             ⚠️ CSV Backup Data File Not Found on GitHub!<br><br>
             <span style="font-weight: normal; color: #555; font-size: 14px; display: block; margin-bottom: 15px;">
-                The server could not read the file automatically. Use the file selection control above to map data locally.
+                The server could not read the file automatically. Use the local input switch handle control above.
             </span>
         </div>
     `;
