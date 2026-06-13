@@ -89,23 +89,17 @@
     <script>
         let mangaData = [];
 
-        // Fetch CSV data directly from your GitHub repository folder
-        fetch('/Comics/comick-mylist-2026-06-13.csv')
-            .then(response => {
-                if (!response.ok) throw new Error('Primary path failed');
-                return response.text();
-            })
-            .then(csvText => {
-                processCSV(csvText);
-            })
+        // Fetch using explicit absolute repository file structures
+        fetch('comick-mylist-2026-06-13.csv')
+            .then(response => response.text())
+            .then(csvText => processCSV(csvText))
             .catch(() => {
-                // Fallback option using relative pathing
-                fetch('comick-mylist-2026-06-13.csv')
+                fetch('/Comics/comick-mylist-2026-06-13.csv')
                     .then(response => response.text())
-                    .then(csvText => processCSV(csvText));
+                    .then(csvText => processCSV(csvText))
+                    .catch(err => alert("Error: CSV file not found inside repository. Check file name."));
             });
 
-        // Native, robust CSV parsing logic targeting quotes and commas safely
         function parseCSVLines(text) {
             let lines = [];
             let row = [""];
@@ -136,17 +130,22 @@
             const rawLines = parseCSVLines(csvText);
             if (rawLines.length < 2) return;
 
-            const headers = rawLines[0].map(h => h.trim());
             mangaData = [];
 
+            // Read rows skipping headers, mapping values explicitly by position index numbers
             for (let i = 1; i < rawLines.length; i++) {
                 let values = rawLines[i];
-                if (values.length < headers.length) continue;
+                if (values.length < 2 || !values[1]) continue; 
 
-                let entry = {};
-                headers.forEach((header, index) => {
-                    entry[header] = values[index] ? values[index].trim() : '';
-                });
+                let entry = {
+                    id: values[0] ? values[0].trim() : '',
+                    title: values[1] ? values[1].trim() : '',
+                    chapters: values[6] ? values[6].trim() : '0',
+                    score: values[9] ? values[9].trim() : '0',
+                    status: values[10] ? values[10].trim() : 'Unknown',
+                    start_date: values[7] ? values[7].trim() : '-',
+                    finish_date: values[8] ? values[8].trim() : '-'
+                };
                 mangaData.push(entry);
             }
             renderTable(mangaData);
@@ -157,26 +156,24 @@
             tbody.innerHTML = '';
             
             data.forEach(row => {
-                if (!row.manga_title || row.manga_title.trim() === "") return;
-
                 let statusClass = '';
-                const currentStatus = (row.my_status || '').trim().toLowerCase();
+                const currentStatus = row.status.toLowerCase();
                 if (currentStatus === 'reading') statusClass = 'status-reading';
                 else if (currentStatus === 'completed') statusClass = 'status-completed';
-                else if (currentStatus === 'on hold') statusClass = 'status-onhold';
-                else if (currentStatus === 'plan to read') statusClass = 'status-plantoread';
+                else if (currentStatus === 'on hold' || currentStatus === 'onhold') statusClass = 'status-onhold';
+                else if (currentStatus === 'plan to read' || currentStatus === 'plantoread') statusClass = 'status-plantoread';
 
-                const displayScore = (row.my_score && row.my_score !== '0') ? `${row.my_score}/10` : '-';
+                const displayScore = (row.score !== '0' && row.score !== '') ? `${row.score}/10` : '-';
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><a class="mal-link" href="https://myanimelist.net{row.manga_mangadb_id}" target="_blank">#${row.manga_mangadb_id}</a></td>
-                    <td><strong>${row.manga_title}</strong></td>
-                    <td>📖 ${row.my_read_chapters || '0'}</td>
+                    <td><a class="mal-link" href="https://myanimelist.net{row.id}" target="_blank">#${row.id}</a></td>
+                    <td><strong>${row.title}</strong></td>
+                    <td>📖 ${row.chapters}</td>
                     <td class="score-tag">${displayScore}</td>
-                    <td><span class="badge ${statusClass}">${row.my_status || 'Unknown'}</span></td>
-                    <td>${row.my_start_date || '-'}</td>
-                    <td>${row.my_finish_date || '-'}</td>
+                    <td><span class="badge ${statusClass}">${row.status}</span></td>
+                    <td>${row.start_date || '-'}</td>
+                    <td>${row.finish_date || '-'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -185,10 +182,9 @@
         document.getElementById('search').addEventListener('input', function() {
             const query = this.value.toLowerCase();
             const filtered = mangaData.filter(row => {
-                return (row.manga_title && row.manga_title.toLowerCase().includes(query)) ||
-                       (row.my_status && row.my_status.toLowerCase().includes(query)) ||
-                       (row.manga_mangadb_id && row.manga_mangadb_id.includes(query)) ||
-                       (row.my_score && row.my_score.includes(query));
+                return row.title.toLowerCase().includes(query) ||
+                       row.status.toLowerCase().includes(query) ||
+                       row.id.includes(query);
             });
             renderTable(filtered);
         });
