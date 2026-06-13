@@ -5,31 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-    <link rel="stylesheet" href="style.css?v=7">
+    <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
     <h1>📚 My Full ComicK Database</h1>
-    <div class="subtitle">Complete dataset with structural columns sorting, translation fallbacks and saved preferences</div>
+    <div class="subtitle">Complete local file dataset parser supporting dynamic CSV/XML compilation pipelines</div>
     
     <input type="text" id="search" placeholder="🔍 Search across all fields and metadata columns instantly...">
 
     <!-- Central Control Panel Configuration -->
     <div class="panel-grid">
         <div class="controls-row">
-            <div>
-                <label for="csvFileInput" class="btn btn-secondary">📁 Load Local CSV</label>
-                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-                <span id="fileNameDisplay" style="margin-left: 5px; color: #7f8c8d; font-size: 12px;">(Auto-loading)</span>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <!-- Master Local Import Controllers -->
+                <label for="csvFileInput" class="btn btn-secondary">📁 Load Local CSV / XML</label>
+                <input type="file" id="csvFileInput" accept=".csv, .xml" style="display: none;">
+                <span id="fileNameDisplay" style="color: #7f8c8d; font-size: 12px;">(Select a file to begin)</span>
             </div>
             
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button id="themeToggle" class="btn btn-secondary">🌓 Toggle Theme</button>
-                <button id="exportCsvButton" class="btn btn-primary" style="display: none;">💾 Download Updated CSV</button>
+                <!-- Export Utilities Actions -->
+                <button id="exportCsvButton" class="btn btn-primary" style="display: none;">💾 Export CSV</button>
+                <button id="exportXmlButton" class="btn btn-primary" style="display: none; background-color: #9b59b6;">📦 Export XML</button>
             </div>
         </div>
         
-        <!-- Interactive Visibility Toggle Group Wrapper -->
         <div id="columnToggleWrapper" style="display: none;">
             <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; color: #7f8c8d;">⚙️ Toggle Column Visibility:</div>
             <div id="checkboxContainer" class="checkbox-group"></div>
@@ -45,10 +47,11 @@
         </table>
     </div>
 
-    <script src="csvParser.js?v=7"></script>
-    <script src="api.js?v=7"></script>
-    <script src="ui.js?v=7"></script>
-    <script src="exporter.js?v=7"></script>
-    <script src="app.js?v=7"></script>
+    <!-- Data pipeline modules registration -->
+    <script src="csvParser.js?v=8"></script>
+    <script src="api.js?v=8"></script>
+    <script src="ui.js?v=8"></script>
+    <script src="exporter.js?v=8"></script>
+    <script src="app.js?v=8"></script>
 </body>
 </html>
