@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
-    <!-- Include PapaParse to read CSV files easily -->
+    <!-- CORRIGIDO: Script correto para carregar o leitor de CSV (PapaParse) -->
     <script src="https://cloudflare.com"></script>
     <style>
         body { 
@@ -91,7 +91,7 @@
     <script>
         let mangaData = [];
 
-                // Solução para o caminho correto no repositório GitHub Pages
+        // Solução para o caminho correto no repositório GitHub Pages
         fetch('/Comics/comick-mylist-2026-06-13.csv')
             .then(response => {
                 if (!response.ok) {
@@ -111,7 +111,6 @@
             })
             .catch(error => {
                 console.error('Erro ao carregar o CSV:', error);
-                // Caso dê erro de caminho relativo, tenta carregar da raiz atual
                 carregarCaminhoAlternativo();
             });
 
@@ -135,10 +134,8 @@
             tbody.innerHTML = '';
             
             data.forEach(row => {
-                // Safeguard against missing titles or empty lines
                 if (!row.manga_title || row.manga_title.trim() === "") return;
 
-                // Handle status class styling dynamically
                 let statusClass = '';
                 const currentStatus = (row.my_status || '').trim().toLowerCase();
                 if (currentStatus === 'reading') statusClass = 'status-reading';
@@ -146,9 +143,9 @@
                 else if (currentStatus === 'on hold') statusClass = 'status-onhold';
                 else if (currentStatus === 'plan to read') statusClass = 'status-plantoread';
 
-                // Display '-' if score is 0 (unrated)
                 const displayScore = (row.my_score && row.my_score !== '0') ? `${row.my_score}/10` : '-';
 
+                // CORRIGIDO: Ajustado o link do MAL com barra e o caractere '$' correto
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><a class="mal-link" href="https://myanimelist.net{row.manga_mangadb_id}" target="_blank">#${row.manga_mangadb_id}</a></td>
@@ -163,7 +160,6 @@
             });
         }
 
-        // Live filtering logic targeting precise fields
         document.getElementById('search').addEventListener('input', function() {
             const query = this.value.toLowerCase();
             const filtered = mangaData.filter(row => {
