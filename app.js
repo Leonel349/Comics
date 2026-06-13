@@ -12,6 +12,18 @@ fetch('comick-mylist-2026-06-13.csv')
             .catch(err => alert("Error: Target data backup file not detected in project path."));
     });
 
+// Helper function to extract only numbers out of a full URL string or text
+function cleanId(value) {
+    if (!value) return '';
+    const clean = value.trim();
+    // If it contains a slash, pull the very last text chunk (the numerical ID)
+    if (clean.includes('/')) {
+        const parts = clean.split('/').filter(Boolean);
+        return parts[parts.length - 1] || '';
+    }
+    return clean;
+}
+
 function processCSV(csvText) {
     const rawLines = parseCSVLines(csvText);
     if (rawLines.length < 1) return;
@@ -74,9 +86,11 @@ function renderTable(data) {
                     td.innerHTML = `<div class="cover-placeholder">-</div>`;
                 }
             } else if (header.toLowerCase() === 'mal' && val !== '') {
-                td.innerHTML = `<a class="mal-link" href="https://myanimelist.net{val}" target="_blank">#${val}</a>`;
+                const idOnly = cleanId(val);
+                td.innerHTML = `<a class="mal-link" href="https://myanimelist.net{idOnly}" target="_blank">#${idOnly}</a>`;
             } else if (header.toLowerCase() === 'anilist' && val !== '') {
-                td.innerHTML = `<a class="mal-link" href="https://anilist.co{val}" target="_blank">#${val}</a>`;
+                const idOnly = cleanId(val);
+                td.innerHTML = `<a class="mal-link" href="https://anilist.co{idOnly}" target="_blank">#${idOnly}</a>`;
             } else {
                 td.textContent = val;
                 if (header.toLowerCase() === 'title') td.className = 'title-column';
@@ -93,7 +107,10 @@ async function fetchCoversSequentially(data) {
 
     for (let i = 0; i < rowsWithMal.length; i++) {
         const item = rowsWithMal[i];
-        const malId = item.row.mal;
+        // FIX: Extract only the numeric ID out of the column row data
+        const malId = cleanId(item.row.mal);
+
+        if (!malId || isNaN(malId)) continue; // Skip if it cannot find a valid number
 
         try {
             const response = await fetch(`https://jikan.moe{malId}`);
@@ -118,7 +135,7 @@ async function fetchCoversSequentially(data) {
         } catch (err) {
             console.warn(`Could not resolve artwork frame for MAL item #${malId}`, err);
         }
-        await new Promise(resolve => setTimeout(resolve, 350));
+        await new Promise(resolve => setTimeout(resolve, 500)); // Safer 500ms request spacing
     }
 }
 
