@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
-    <!-- CORRIGIDO: Script correto para carregar o leitor de CSV (PapaParse) -->
-    <script src="https://cloudflare.com"></script>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
@@ -91,42 +89,67 @@
     <script>
         let mangaData = [];
 
-        // Solução para o caminho correto no repositório GitHub Pages
+        // Fetch CSV data directly from your GitHub repository folder
         fetch('/Comics/comick-mylist-2026-06-13.csv')
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Arquivo CSV não encontrado no repositório');
-                }
+                if (!response.ok) throw new Error('Primary path failed');
                 return response.text();
             })
             .then(csvText => {
-                Papa.parse(csvText, {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        mangaData = results.data;
-                        renderTable(mangaData);
-                    }
-                });
+                processCSV(csvText);
             })
-            .catch(error => {
-                console.error('Erro ao carregar o CSV:', error);
-                carregarCaminhoAlternativo();
+            .catch(() => {
+                // Fallback option using relative pathing
+                fetch('comick-mylist-2026-06-13.csv')
+                    .then(response => response.text())
+                    .then(csvText => processCSV(csvText));
             });
 
-        function carregarCaminhoAlternativo() {
-            fetch('comick-mylist-2026-06-13.csv')
-                .then(response => response.text())
-                .then(csvText => {
-                    Papa.parse(csvText, {
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: function(results) {
-                            mangaData = results.data;
-                            renderTable(mangaData);
-                        }
-                    });
+        // Native, robust CSV parsing logic targeting quotes and commas safely
+        function parseCSVLines(text) {
+            let lines = [];
+            let row = [""];
+            let inQuotes = false;
+
+            for (let i = 0; i < text.length; i++) {
+                let c = text[i];
+                let next = text[i+1];
+                
+                if (c === '"') {
+                    if (inQuotes && next === '"') { row[row.length - 1] += '"'; i++; } 
+                    else { inQuotes = !inQuotes; }
+                } else if (c === ',' && !inQuotes) {
+                    row.push('');
+                } else if ((c === '\r' || c === '\n') && !inQuotes) {
+                    if (c === '\r' && next === '\n') { i++; }
+                    lines.push(row);
+                    row = [""];
+                } else {
+                    row[row.length - 1] += c;
+                }
+            }
+            if (row.length > 1 || row[0] !== "") lines.push(row);
+            return lines;
+        }
+
+        function processCSV(csvText) {
+            const rawLines = parseCSVLines(csvText);
+            if (rawLines.length < 2) return;
+
+            const headers = rawLines[0].map(h => h.trim());
+            mangaData = [];
+
+            for (let i = 1; i < rawLines.length; i++) {
+                let values = rawLines[i];
+                if (values.length < headers.length) continue;
+
+                let entry = {};
+                headers.forEach((header, index) => {
+                    entry[header] = values[index] ? values[index].trim() : '';
                 });
+                mangaData.push(entry);
+            }
+            renderTable(mangaData);
         }
 
         function renderTable(data) {
@@ -145,7 +168,6 @@
 
                 const displayScore = (row.my_score && row.my_score !== '0') ? `${row.my_score}/10` : '-';
 
-                // CORRIGIDO: Ajustado o link do MAL com barra e o caractere '$' correto
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><a class="mal-link" href="https://myanimelist.net{row.manga_mangadb_id}" target="_blank">#${row.manga_mangadb_id}</a></td>
