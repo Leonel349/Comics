@@ -33,7 +33,7 @@ function processCSV(csvText) {
     const rawHeaders = rawLines[0].map(h => h.trim().toLowerCase());
     
     // Enforce your precise exact column sequence layout safely
-    headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
+    //headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
 
     // Direct structural dynamic building of functional table headers node layout
     const headersRow = document.getElementById('tableHeaders');
