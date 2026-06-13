@@ -5,50 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-    <link rel="stylesheet" href="style.css?v=5">
+    <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
     <h1>📚 My Full ComicK Database</h1>
-    <div class="subtitle">Complete dataset with dynamic fallback search and smart data synchronization</div>
+    <div class="subtitle">Complete dataset with structural columns sorting, translation fallbacks and saved preferences</div>
     
     <input type="text" id="search" placeholder="🔍 Search across all fields and metadata columns instantly...">
 
-    <!-- Action Bar Controls -->
-    <div id="controlsContainer" style="margin-bottom: 20px; text-align: center; font-size: 13px; display: flex; justify-content: center; gap: 15px; align-items: center;">
-        <div>
-            <label for="csvFileInput" style="background: #e2e8f0; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 500; color: #4a5568; border: 1px solid #cbd5e1;">
-                📁 Load Local CSV File
-            </label>
-            <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
-            <span id="fileNameDisplay" style="margin-left: 5px; color: #7f8c8d;">(Auto-loading from GitHub Server)</span>
+    <!-- Central Control Panel Configuration -->
+    <div class="panel-grid">
+        <div class="controls-row">
+            <div>
+                <label for="csvFileInput" class="btn btn-secondary">📁 Load Local CSV</label>
+                <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+                <span id="fileNameDisplay" style="margin-left: 5px; color: #7f8c8d; font-size: 12px;">(Auto-loading)</span>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="themeToggle" class="btn btn-secondary">🌓 Toggle Theme</button>
+                <button id="exportCsvButton" class="btn btn-primary" style="display: none;">💾 Download Updated CSV</button>
+            </div>
         </div>
-
-        <!-- Dynamic export update utility button -->
-        <button id="exportCsvButton" style="background: #2ecc71; color: white; padding: 8px 14px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; display: none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            💾 Download Updated CSV
-        </button>
+        
+        <!-- Interactive Visibility Toggle Group Wrapper -->
+        <div id="columnToggleWrapper" style="display: none;">
+            <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; color: #7f8c8d;">⚙️ Toggle Column Visibility:</div>
+            <div id="checkboxContainer" class="checkbox-group"></div>
+        </div>
     </div>
 
     <div class="table-container">
         <table id="mangaTable">
             <thead>
-                <tr id="tableHeaders">
-                    <!-- CSV Headers are automatically built here -->
-                </tr>
+                <tr id="tableHeaders"></tr>
             </thead>
-            <tbody>
-                <!-- Rows injected automatically -->
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
-       <!-- Modularized core script pipeline structure -->
-    <script src="csvParser.js?v=6"></script>
-    <script src="api.js?v=6"></script>
-    <script src="ui.js?v=6"></script>
-    <script src="exporter.js?v=6"></script>
-    <script src="app.js?v=6"></script>
+    <script src="csvParser.js?v=7"></script>
+    <script src="api.js?v=7"></script>
+    <script src="ui.js?v=7"></script>
+    <script src="exporter.js?v=7"></script>
+    <script src="app.js?v=7"></script>
 </body>
 </html>
-
