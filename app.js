@@ -1,4 +1,3 @@
-// Main global application runtime data states register
 let mangaData = [];
 let headersList = [];
 
@@ -9,7 +8,6 @@ const csvFilePossibilities = [
     'mangas.csv'
 ];
 
-// Orchestrator processing network loading lookup pipeline configurations
 async function loadCSVData() {
     let csvText = null;
     for (let fileName of csvFilePossibilities) {
@@ -21,7 +19,7 @@ async function loadCSVData() {
                 updateUploadUI(fileName);
                 break;
             }
-        } catch (e) { console.warn(`Path mapping evaluation skipped for target file: ${fileName}`); }
+        } catch (e) { console.warn(`Path skip tracking evaluation element: ${fileName}`); }
     }
     if (csvText) processCSV(csvText);
     else showMissingFileAlert();
@@ -36,14 +34,18 @@ function processCSV(csvText) {
         headersList.unshift('cover');
     }
 
-    // Build header layout nodes out dynamically via UI module layers
+    // Direct structural dynamic building of functional table headers
     const headersRow = document.getElementById('tableHeaders');
     headersRow.innerHTML = '';
     headersList.forEach(header => {
         const th = document.createElement('th');
         th.textContent = header;
+        // Bind dynamic alpha-sorting evaluation triggers directly onto the element headers click
+        th.addEventListener('click', () => sortTableByColumn(header));
         headersRow.appendChild(th);
     });
+
+    setupColumnCheckboxes();
 
     mangaData = [];
     for (let i = 1; i < rawLines.length; i++) {
@@ -54,7 +56,6 @@ function processCSV(csvText) {
         let valueIdx = 0;
         headersList.forEach((header) => {
             if (header === 'cover') {
-                // If it already holds an asset string pointer leave it, else create blank item
                 entry[header] = values[0] && (values[0].startsWith('http') || values[0] === '') ? values[0] : ''; 
             } else {
                 entry[header] = values[valueIdx] ? values[valueIdx].trim() : '';
@@ -68,7 +69,6 @@ function processCSV(csvText) {
     processCoversAndFallbacks(mangaData);
 }
 
-// Attach manual upload interaction handles
 document.getElementById('csvFileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -84,7 +84,6 @@ document.getElementById('csvFileInput').addEventListener('change', function(e) {
     reader.readAsText(file);
 });
 
-// Live input search string matching hook listeners
 document.getElementById('search').addEventListener('input', function() {
     const query = this.value.toLowerCase();
     const filtered = mangaData.filter(row => {
@@ -93,5 +92,6 @@ document.getElementById('search').addEventListener('input', function() {
     renderTable(filtered);
 });
 
-// Initialize the data fetching application layer immediately on startup
+// Bootstrap application layers immediately on DOM readiness
+initThemeMode();
 loadCSVData();
