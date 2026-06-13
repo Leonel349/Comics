@@ -80,10 +80,16 @@ function processCSV(csvText) {
     processCoversAndFallbacks(mangaData);
 }
 
+// Corrected manual file input event handle selection layer
 document.getElementById('csvFileInput').addEventListener('change', function(e) {
-    const file = e.target.files;
-    if (!file) return;
-    updateUploadUI(file.name);
+    const files = e.target.files;
+    
+    // FIX: Verify a file actually exists and pull explicitly from index position 0
+    if (!files || files.length === 0) return;
+    const targetFile = files[0];
+
+    updateUploadUI(targetFile.name);
+    
     const reader = new FileReader();
     reader.onload = function(evt) {
         const container = document.querySelector('.table-container');
@@ -92,16 +98,9 @@ document.getElementById('csvFileInput').addEventListener('change', function(e) {
         }
         processCSV(evt.target.result);
     };
-    reader.readAsText(file);
+    reader.readAsText(targetFile); // FIX: Passes the true single file instance instead of the full file array
 });
 
-document.getElementById('search').addEventListener('input', function() {
-    const query = this.value.toLowerCase();
-    const filtered = mangaData.filter(row => {
-        return Object.values(row).some(val => String(val).toLowerCase().includes(query));
-    });
-    renderTable(filtered);
-});
 
 // Bootstrap application layers immediately on DOM readiness
 initThemeMode();
