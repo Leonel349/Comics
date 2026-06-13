@@ -1,7 +1,6 @@
 let currentSortColumn = null;
 let isSortAscending = true;
 
-// Active tracking key strings for permanent state saving
 const STORAGE_HIDDEN_COLS_KEY = 'comics_hidden_columns_registry';
 const STORAGE_THEME_KEY = 'comics_active_visual_theme';
 
@@ -91,21 +90,21 @@ function renderTable(data) {
                 } else {
                     td.innerHTML = `<div class="cover-placeholder" id="placeholder-${index}">...</div>`;
                 }
-            } else if (header.toLowerCase() === 'mal' && val !== '') {
+            } else if (header === 'mal' && val !== '') {
                 const idOnly = cleanId(val);
                 td.innerHTML = idOnly ? `<a class="mal-link" href="https://myanimelist.net{idOnly}" target="_blank">#${idOnly}</a>` : val;
-            } else if (header.toLowerCase() === 'anilist' && val !== '') {
+            } else if (header === 'anilist' && val !== '') {
                 const idOnly = cleanId(val);
                 td.innerHTML = idOnly ? `<a class="mal-link" href="https://anilist.co{idOnly}" target="_blank">#${idOnly}</a>` : val;
             } else {
                 td.textContent = val;
-                if (header.toLowerCase() === 'title') td.className = 'title-column';
+                if (header === 'title') td.className = 'title-column';
             }
             tr.appendChild(td);
         });
         tbody.appendChild(tr);
     });
-    applyColumnVisibilityStates(); // Enforce visibility structures onto table data nodes
+    applyColumnVisibilityStates(); 
 }
 
 function sortTableByColumn(columnName) {
@@ -120,7 +119,6 @@ function sortTableByColumn(columnName) {
         let valA = String(a[columnName] || '').toLowerCase().trim();
         let valB = String(b[columnName] || '').toLowerCase().trim();
 
-        // Alphanumeric evaluation adjustments (Parse cleanly if cell contains pure numerical integers)
         const numA = parseFloat(valA);
         const numB = parseFloat(valB);
         if (!isNaN(numA) && !isNaN(numB)) {
@@ -140,7 +138,7 @@ function updateSortingGlyphs() {
     const ths = document.querySelectorAll('#mangaTable th');
     ths.forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
-        if (th.textContent.replace(/[🔼🔽]/g, '').trim() === currentSortColumn) {
+        if (th.textContent.replace(/[🔼🔽]/g, '').trim().toLowerCase() === currentSortColumn) {
             th.classList.add(isSortAscending ? 'sort-asc' : 'sort-desc');
         }
     });
@@ -187,7 +185,7 @@ function showMissingFileAlert() {
         <div style="padding: 30px; text-align: center; color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 8px; border: 1px solid #f5c6cb;">
             ⚠️ CSV Backup Data File Not Found on GitHub!<br><br>
             <span style="font-weight: normal; color: #555; font-size: 14px; display: block; margin-bottom: 15px;">
-                The server could not read the file automatically. Use the local input switch handle control above.
+                The server could not read the file automatically. Use the local input control above.
             </span>
         </div>
     `;
