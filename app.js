@@ -5,7 +5,6 @@ const csvFilePossibilities = [
     'comick-mylist-2026-06-13.csv',
     'comick-mylist-2026-06-13.CSV',
     'comick-mylist.csv',
-    'comick-mylist-2026-06-13.CSV',
     'mangas.csv'
 ];
 
