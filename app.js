@@ -54,6 +54,8 @@ function processCSV(csvText) {
 
     addLog(`Parsed ${rawLines.length - 1} data rows from flat spreadsheet stream. Building grid layers...`, 'success');
     headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
+    
+    // CORREÇÃO AQUI: Pegamos apenas a linha 0 [0] antes de fazer o mapeamento (.map)
     const rawHeaders = rawLines[0].map(h => String(h).trim().toLowerCase());
 
     buildTableHeadersMarkup();
