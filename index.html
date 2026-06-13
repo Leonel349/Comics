@@ -92,7 +92,7 @@
         let mangaData = [];
 
         // Fetch and parse the target CSV file
-        fetch('meus_mangas.csv')
+        fetch('comick-mylist-2026-06-13.csv')
             .then(response => response.text())
             .then(csvText => {
                 Papa.parse(csvText, {
