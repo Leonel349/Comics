@@ -4,12 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
-    
-    <!-- FIX: This inline data string tells the browser not to look for an external favicon.ico file, instantly solving the 404 error -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📚</text></svg>">
-    
-    <!-- Incrementing version numbers forces the browser to drop cached file data -->
-    <link rel="stylesheet" href="style.css?v=3">
+    <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -17,6 +13,15 @@
     <div class="subtitle">Complete dataset with dynamic MyAnimeList cover artwork streaming</div>
     
     <input type="text" id="search" placeholder="🔍 Search across all fields and metadata columns instantly...">
+
+    <!-- Local File Loader backup interface layer -->
+    <div id="fileUploadContainer" style="margin-bottom: 20px; text-align: center; font-size: 13px; color: #7f8c8d;">
+        <label for="csvFileInput" style="background: #e2e8f0; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; color: #4a5568;">
+            📁 Select CSV from Computer
+        </label>
+        <input type="file" id="csvFileInput" accept=".csv" style="display: none;">
+        <span id="fileNameDisplay" style="margin-left: 10px;">(Optional: Load local backup file directly)</span>
+    </div>
 
     <div class="table-container">
         <table id="mangaTable">
@@ -31,8 +36,7 @@
         </table>
     </div>
 
-    <!-- UPDATE TO VERSION 3: This guarantees your browser uses the cleaned string numbers for images -->
-    <script src="csvParser.js?v=3"></script>
-    <script src="app.js?v=3"></script>
+    <script src="csvParser.js?v=4"></script>
+    <script src="app.js?v=4"></script>
 </body>
 </html>
