@@ -2,11 +2,11 @@ let mangaData = [];
 let headersList = [];
 
 // Fetch data automatically from repository paths
-fetch('comick_list')
+fetch('comick_list.csv')
     .then(response => response.text())
     .then(csvText => processCSV(csvText))
     .catch(() => {
-        fetch('/Comics/comick_list')
+        fetch('/Comics/comick_list.csv')
             .then(response => response.text())
             .then(csvText => processCSV(csvText))
             .catch(err => alert("Error: Target data backup file not detected in project path."));
