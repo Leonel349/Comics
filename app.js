@@ -6,16 +6,7 @@ function initLocalOnlyUI() {
     if (display) display.textContent = "Please select a local CSV or XML file to begin...";
     document.getElementById('exportCsvButton').style.display = 'none';
     document.getElementById('exportXmlButton').style.display = 'none';
-    
-    const container = document.querySelector('.table-container');
-    container.innerHTML = `
-        <div id="welcomeAlert" style="padding: 40px; text-align: center; color: #555; background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color);">
-            📖 <strong>Library Ready</strong><br><br>
-            <span style="font-size: 14px; color: #7f8c8d;">
-                Click the <strong>📁 Load Local CSV / XML</strong> button above to render your database file securely.
-            </span>
-        </div>
-    `;
+    showMissingFileAlert();
 }
 
 // MASTER FILE IMPORT INTERCEPTOR ROUTER
@@ -24,16 +15,13 @@ document.getElementById('csvFileInput').addEventListener('change', function(e) {
     if (!files || files.length === 0) return;
     const targetFile = files[0];
 
-    const display = document.getElementById('fileNameDisplay');
-    if (display) display.textContent = `Active: ${targetFile.name}`;
-    
-    // Unhide actions dashboard utilities buttons layout switches
-    document.getElementById('exportCsvButton').style.display = 'inline-block';
-    document.getElementById('exportXmlButton').style.display = 'inline-block';
+    addLog(`File loaded by local input: "${targetFile.name}" [Size: ${(targetFile.size / 1024).toFixed(2)} KB]`, 'info');
+    updateUploadUI(targetFile.name);
     
     const reader = new FileReader();
     reader.onload = function(evt) {
         const fileContent = evt.target.result;
+        addLog("File context buffer read completed successfully. Processing strings structural encoding format...", "info");
         
         // Wipe down older tables
         const container = document.querySelector('.table-container');
@@ -41,8 +29,10 @@ document.getElementById('csvFileInput').addEventListener('change', function(e) {
         
         // ROUTING ENGINE: Route evaluation down based on true string format properties
         if (targetFile.name.toLowerCase().endsWith('.xml') || fileContent.trim().startsWith('<')) {
+            addLog("XML file encoding profile matched. Injecting parsing pipeline routing rules...", "info");
             processXML(fileContent);
         } else {
+            addLog("CSV standard flat data file matched. Injecting table cell delimiting engines...", "info");
             processCSV(fileContent);
         }
     };
@@ -55,11 +45,14 @@ function cleanId(value) {
     return matches ? matches[matches.length - 1] : '';
 }
 
-// 1. STANDARD STREAMLINED CSV HANDLING SCHEMAS 
 function processCSV(csvText) {
     const rawLines = parseCSVLines(csvText);
-    if (rawLines.length < 1) return;
+    if (rawLines.length < 1) {
+        addLog("Failed to parse document: CSV file text structure is empty.", "error");
+        return;
+    }
 
+    addLog(`Parsed ${rawLines.length - 1} data rows from flat spreadsheet stream. Building grid layers...`, 'success');
     headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
     const rawHeaders = rawLines[0].map(h => String(h).trim().toLowerCase());
 
@@ -85,19 +78,24 @@ function processCSV(csvText) {
     completeProcessingPipeline();
 }
 
-// 2. NEW NATIVE XML COMPILATION SCHEMAS TREE DOM ELEMENT PARSER
 function processXML(xmlText) {
-    // Instantiate web standard internal DOM string element map parsing engines
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlText, "text/xml");
     
-    // Explicit blueprint columns array matching strict alignment metrics
+    // Safety handling against broken non-valid XML trees
+    const parserError = xmlDoc.querySelector('parsererror');
+    if (parserError) {
+        addLog(`Malformed XML context parsing constraint: ${parserError.textContent}`, 'error');
+        alert("Error parsing XML structure. Verify file integrity tags formatting rules.");
+        return;
+    }
+
     headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
-    
     buildTableHeadersMarkup();
 
     mangaData = [];
     const mangaNodes = xmlDoc.getElementsByTagName("manga");
+    addLog(`Discovered ${mangaNodes.length} structural <manga> items inside hierarchical XML map tree rows. Building objects...`, 'success');
     
     for (let i = 0; i < mangaNodes.length; i++) {
         const mangaNode = mangaNodes[i];
@@ -132,7 +130,14 @@ function buildTableHeadersMarkup() {
 
 function completeProcessingPipeline() {
     renderTable(mangaData);
+    addLog(`Data table rows injection completely mapped onto interface node grids. Total items: ${mangaData.length}`, 'success');
     processCoversAndFallbacks(mangaData);
+}
+
+// Track export logs inside exporter module directly
+function logExportAction(formatType) {
+    addLog(`Compilation export requested. Compiling data memory map registry into layout schema: [.${formatType.toUpperCase()}]`, 'info');
+    addLog(`File generation processing completely resolved. Initiating binary blob attachment file down download trigger...`, 'success');
 }
 
 document.getElementById('search').addEventListener('input', function() {
