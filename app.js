@@ -104,8 +104,11 @@ function processXML(xmlText) {
         let entry = {};
         
         headersList.forEach(header => {
-            const targetElement = mangaNode.getElementsByTagName(header)[0];
-            let valueText = targetElement ? targetElement.textContent.trim() : '';
+            // CORREÇÃO: Buscamos a lista de elementos com a tag do cabeçalho
+            const elementsFound = mangaNode.getElementsByTagName(header);
+            
+            // CORREÇÃO: Pegamos o primeiro elemento [0] se ele existir, e só então lemos o textContent
+            let valueText = (elementsFound && elementsFound.length > 0) ? elementsFound[0].textContent.trim() : '';
             
             if (header === 'cover') {
                 entry[header] = valueText.startsWith('http') ? valueText : '';
