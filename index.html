@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Manga Archive</title>
-    <!-- Link to external styling sheet -->
-    <link rel="stylesheet" href="style.css">
+    <!-- Append version control query parameters to bypass old CSS cache memory -->
+    <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
 
@@ -27,8 +27,8 @@
         </table>
     </div>
 
-    <!-- Scripts modular division -->
-    <script src="csvParser.js"></script>
-    <script src="app.js"></script>
+    <!-- FORCE RELOAD: Appending version arguments explicitly breaks local browser caches -->
+    <script src="csvParser.js?v=2"></script>
+    <script src="app.js?v=2"></script>
 </body>
 </html>
