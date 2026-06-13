@@ -29,19 +29,13 @@ function processCSV(csvText) {
     const rawLines = parseCSVLines(csvText);
     if (rawLines.length < 1) return;
 
-    // Direct header extraction matching your precise tracking properties sequence
-    headersList = rawLines[0].map(h => h.trim().toLowerCase());
+    // 1. Parse raw headers exactly from row 0 and sanitize them to lowercase
+    const rawHeaders = rawLines[0].map(h => h.trim().toLowerCase());
     
-    // Safety check: ensure 'cover' is present at the very beginning of the index registry
-    if (headersList.length > 0 && headersList[0] !== 'cover') {
-        if (headersList.includes('cover')) {
-            // If it exists somewhere else, remove it so we can push it to index 0
-            headersList = headersList.filter(h => h !== 'cover');
-        }
-        headersList.unshift('cover');
-    }
+    // Enforce your precise exact column sequence layout safely
+    headersList = ['cover', 'hid', 'title', 'type', 'rating', 'origination', 'read', 'last_read', 'synonyms', 'mal', 'anilist', 'mangaupdates'];
 
-    // Direct structural dynamic building of functional table headers
+    // Direct structural dynamic building of functional table headers node layout
     const headersRow = document.getElementById('tableHeaders');
     headersRow.innerHTML = '';
     headersList.forEach(header => {
@@ -53,28 +47,32 @@ function processCSV(csvText) {
 
     setupColumnCheckboxes();
 
+    // 2. Map data rows dynamically matching strings directly by key names to prevent shift bugs
     mangaData = [];
     for (let i = 1; i < rawLines.length; i++) {
         let values = rawLines[i];
         if (values.length < 2) continue;
 
         let entry = {};
-        let valueIdx = 0;
         
+        // Loop through our strict header order configuration blueprint
         headersList.forEach((header) => {
-            if (header === 'cover') {
-                // Check if row entry string value is already an online HTTP image link string path
-                const possibleImg = values[0] ? values[0].trim() : '';
-                entry[header] = (possibleImg.startsWith('http')) ? possibleImg : '';
-                // Only step the column reader index forward if 'cover' was native to the CSV text layout
-                if (rawLines[0].map(h=>h.trim().toLowerCase()).startsWith && rawLines[0][0].trim().toLowerCase() === 'cover') {
-                    valueIdx++;
+            // Find where this header sits in the original CSV raw index array row layout
+            const csvIndex = rawHeaders.indexOf(header);
+            
+            if (csvIndex !== -1 && values[csvIndex] !== undefined) {
+                const cellVal = values[csvIndex].trim();
+                // Clean image link string overrides
+                if (header === 'cover') {
+                    entry[header] = cellVal.startsWith('http') ? cellVal : '';
+                } else {
+                    entry[header] = cellVal;
                 }
             } else {
-                entry[header] = values[valueIdx] ? values[valueIdx].trim() : '';
-                valueIdx++;
+                entry[header] = ''; // Safe empty fallback if column cell is blank or missing
             }
         });
+        
         mangaData.push(entry);
     }
     
