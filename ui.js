@@ -114,11 +114,13 @@ function renderTable(data) {
                 } else {
                     td.innerHTML = `<div class="cover-placeholder" id="placeholder-${index}">...</div>`;
                 }
-            } else if (header === 'mal' && val !== '') {
+            } else if (header === 'mal' && val !== '' && val !== '-') {
                 const idOnly = cleanId(val);
+                // CORREÇÃO: Uso de crases (``) e rota correta da URL do MyAnimeList
                 td.innerHTML = idOnly ? `<a class="mal-link" href="https://myanimelist.net{idOnly}" target="_blank">#${idOnly}</a>` : val;
-            } else if (header === 'anilist' && val !== '') {
+            } else if (header === 'anilist' && val !== '' && val !== '-') {
                 const idOnly = cleanId(val);
+                // CORREÇÃO: Uso de crases (``) e rota correta da URL do AniList
                 td.innerHTML = idOnly ? `<a class="mal-link" href="https://anilist.co{idOnly}" target="_blank">#${idOnly}</a>` : val;
             } else {
                 td.textContent = val;
