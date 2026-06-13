@@ -4,6 +4,27 @@ let isSortAscending = true;
 const STORAGE_HIDDEN_COLS_KEY = 'comics_hidden_columns_registry';
 const STORAGE_THEME_KEY = 'comics_active_visual_theme';
 
+// CENTRALIZED MONITORING LIVE TERMINAL LOG ENGINE
+function addLog(message, type = 'info') {
+    const logConsole = document.getElementById('logConsoleOutput');
+    if (!logConsole) return;
+
+    const timestamp = new Date().toLocaleTimeString();
+    const logRow = document.createElement('div');
+    logRow.className = `log-row ${type}`;
+    logRow.textContent = `[${timestamp}] > ${message}`;
+
+    logConsole.appendChild(logRow);
+    // Force scrolling box wrapper down to focus automatically on latest events entries
+    logConsole.scrollTop = logConsole.scrollHeight;
+}
+
+// Clear system log button trigger hook
+document.getElementById('clearLogBtn').addEventListener('click', () => {
+    const logConsole = document.getElementById('logConsoleOutput');
+    if (logConsole) logConsole.innerHTML = '<div class="log-row info">Logs cleared by user. Standby...</div>';
+});
+
 function getSavedHiddenColumns() {
     const saved = localStorage.getItem(STORAGE_HIDDEN_COLS_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -16,6 +37,7 @@ function saveHiddenColumns(list) {
 function initThemeMode() {
     const savedTheme = localStorage.getItem(STORAGE_THEME_KEY) || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    addLog(`Visual interface theme mode loaded: "${savedTheme}"`, 'info');
 }
 
 document.getElementById('themeToggle').addEventListener('click', () => {
@@ -23,6 +45,7 @@ document.getElementById('themeToggle').addEventListener('click', () => {
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem(STORAGE_THEME_KEY, newTheme);
+    addLog(`Theme mode swapped to: "${newTheme.toUpperCase()}"`, 'success');
 });
 
 function setupColumnCheckboxes() {
@@ -43,9 +66,11 @@ function setupColumnCheckboxes() {
             const hCols = getSavedHiddenColumns();
             if (!e.target.checked) {
                 if (!hCols.includes(header)) hCols.push(header);
+                addLog(`Column visibility altered: Hidden [${header}]`, 'warning');
             } else {
                 const index = hCols.indexOf(header);
                 if (index > -1) hCols.splice(index, 1);
+                addLog(`Column visibility altered: Visible [${header}]`, 'success');
             }
             saveHiddenColumns(hCols);
             applyColumnVisibilityStates();
@@ -64,7 +89,6 @@ function applyColumnVisibilityStates() {
         const colIdx = index + 1;
         const ths = document.querySelectorAll(`#mangaTable th:nth-child(${colIdx})`);
         const tds = document.querySelectorAll(`#mangaTable td:nth-child(${colIdx})`);
-        
         const shouldHide = hiddenCols.includes(header);
         
         ths.forEach(el => shouldHide ? el.classList.add('hidden-column') : el.classList.remove('hidden-column'));
@@ -108,6 +132,7 @@ function renderTable(data) {
 }
 
 function sortTableByColumn(columnName) {
+    addLog(`Sorting dynamic records index list array by column header: [${columnName.toUpperCase()}]`, 'info');
     if (currentSortColumn === columnName) {
         isSortAscending = !isSortAscending;
     } else {
@@ -132,6 +157,7 @@ function sortTableByColumn(columnName) {
 
     renderTable(mangaData);
     updateSortingGlyphs();
+    addLog(`Table sorted sequentially [Direction: ${isSortAscending ? 'ASCENDING' : 'DESCENDING'}]`, 'success');
 }
 
 function updateSortingGlyphs() {
@@ -152,6 +178,7 @@ function updateTitleInDOM(rowIndex, newTitle) {
     }
 }
 
+// Global runtime execution hooks exposed to app/api drivers
 function updateMalLinkInDOM(rowIndex, malId) {
     const tr = document.querySelector(`tr:nth-child(${rowIndex + 1})`);
     const malColIdx = headersList.indexOf('mal');
@@ -178,14 +205,16 @@ function updateUploadUI(name) {
     const display = document.getElementById('fileNameDisplay');
     if (display) display.textContent = `Active: ${name}`;
     document.getElementById('exportCsvButton').style.display = 'inline-block';
+    document.getElementById('exportXmlButton').style.display = 'inline-block';
 }
 
 function showMissingFileAlert() {
+    addLog("Error loading background files. Local only workspace mode configured.", "warning");
     document.querySelector('.table-container').innerHTML = `
         <div style="padding: 30px; text-align: center; color: #e74c3c; font-weight: bold; background: #fdf2f2; border-radius: 8px; border: 1px solid #f5c6cb;">
-            ⚠️ CSV Backup Data File Not Found on GitHub!<br><br>
-            <span style="font-weight: normal; color: #555; font-size: 14px; display: block; margin-bottom: 15px;">
-                The server could not read the file automatically. Use the local input control above.
+            📖 <strong>Local Workspace Mode Ready</strong><br><br>
+            <span style="font-weight: normal; color: #555; font-size: 14px; display: block;">
+                Select a local CSV or XML dataset file above to populate data records views.
             </span>
         </div>
     `;
